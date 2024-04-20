@@ -100,17 +100,25 @@ function initEventHandlers({ io, db, config }) {
   });
 
   io.on("connection", async (socket) => {
+    
+    // 创建群聊/私聊
     socket.on("channel:create", createChannel({ io, socket, db }));
     socket.on("channel:join", joinChannel({ io, socket, db }));
     socket.on("channel:list", listChannels({ io, socket, db }));
     socket.on("channel:search", searchChannels({ io, socket, db }));
 
+    //用户登录?
     socket.on("user:get", getUser({ io, socket, db }));
+    //创建私聊, 需要传递对方的userId
     socket.on("user:reach", reachUser({ io, socket, db }));
+    //搜索可以聊天的用户
     socket.on("user:search", searchUsers({ io, socket, db }));
 
+    //发送消息
     socket.on("message:send", sendMessage({ io, socket, db }));
+    //获取某个群聊/私聊的聊条消息, 获取离线时收到的消息也使用这个口, 因为客户端应该存着每一个频道最后一条消息的id
     socket.on("message:list", listMessages({ io, socket, db }));
+    // 客户端发送给服务端哪些消息已读
     socket.on("message:ack", ackMessage({ io, socket, db }));
     socket.on("message:typing", typingMessage({ io, socket, db }));
 
@@ -125,7 +133,7 @@ function initEventHandlers({ io, db, config }) {
 
           io.to(userStateRoom(socket.userId)).emit(
             "user:disconnected",
-            socket.userId,
+            socket.userId
           );
         }
       }, config.disconnectionGraceDelay ?? 10_000);

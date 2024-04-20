@@ -5,7 +5,7 @@ const validate = ajv.compile({
   type: "object",
   properties: {
     username: { type: "string", minLength: 2, maxLength: 32 },
-    password: { type: "string", minLength: 8, maxLength: 100 },
+    password: { type: "string", minLength: 3, maxLength: 100 },
   },
   required: ["username", "password"],
   additionalProperties: false,
@@ -13,6 +13,7 @@ const validate = ajv.compile({
 
 export function signup({ app, db }) {
   app.post("/signup", async (req, res) => {
+
     if (!validate(req.body)) {
       return res.status(400).send({
         message: "invalid payload",
@@ -45,7 +46,7 @@ export function signup({ app, db }) {
       },
       () => {
         res.status(200).send(req.user);
-      },
+      }
     );
   });
 }
