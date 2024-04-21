@@ -59,7 +59,7 @@ function setupPassport({ app, io, db }) {
         id: user.id,
         username,
       });
-    }),
+    })
   );
 
   passport.serializeUser((user, cb) => {

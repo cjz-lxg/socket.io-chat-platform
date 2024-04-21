@@ -100,8 +100,9 @@ function initEventHandlers({ io, db, config }) {
   });
 
   io.on("connection", async (socket) => {
-    socket.on("publicKey:get", sendPublicKey({ io, socket, db }));
 
+    //交换密钥
+    socket.on("publicKey:get", sendPublicKey({ io, socket, db }));
     socket.on("symmetricKey:send", receiveSymmetricKey({ io, socket, db }));
 
     // 创建群聊/私聊

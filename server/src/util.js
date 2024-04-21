@@ -5,6 +5,12 @@ import Redis from "ioredis";
 
 import { generateKeyPairSync } from "crypto";
 
+import { createHash } from "crypto";
+
+export function md5(data) {
+  return createHash("md5").update(data).digest("hex");
+}
+
 export const redis = new Redis();
 
 export function generateRSAKeyPair() {

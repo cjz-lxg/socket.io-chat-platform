@@ -1,25 +1,19 @@
-import { generateRSAKeyPair, redis } from "../util";
+import { Scope } from "ajv/dist/compile/codegen/scope.js";
+import { generateRSAKeyPair, redis } from "../util.js";
+import crypto from "crypto";
 
-function sendPublicKey({ io, socket, db }) {
-  return async (payload, callback) => {
-    if (typeof callback !== "function") {
-      return;
-    }
-
+export function sendPublicKey({ io, socket, db }) {
+  return async () => {
     const key_pair = generateRSAKeyPair();
 
-    redis.set(key_pair.publicKey, key_pair.privateKey);
+    redis.set(socket.userId, key_pair.privateKey);
+    // console.log(key_pair);
 
     socket.emit("publicKey:get:response", key_pair.publicKey);
-
-    callback({
-      status: "OK",
-      data: key_pair.publicKey,
-    });
   };
 }
 
-function receiveSymmetricKey({ io, socket, db }) {
+export function receiveSymmetricKey({ io, socket, db }) {
   return async (payload, callback) => {
     if (typeof callback !== "function") {
       return;
@@ -27,7 +21,7 @@ function receiveSymmetricKey({ io, socket, db }) {
 
     const cryptKey = payload.symmetricKey;
 
-    const privateKey = redis.get(key_pair.publicKey);
+    const privateKey = await redis.get(socket.userId);
 
     //基于私钥解密
     const symmetricKey = crypto.privateDecrypt(
@@ -46,8 +40,3 @@ function receiveSymmetricKey({ io, socket, db }) {
     });
   };
 }
-
-export default {
-  sendPublicKey,
-  receiveSymmetricKey,
-};
