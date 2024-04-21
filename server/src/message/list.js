@@ -1,6 +1,6 @@
 import { ajv } from "../util.js";
 import { loadByBase64 } from "../util.js";
-import { redis } from "../util.js";
+import { redis, md5 } from "../util.js";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const validate = ajv.compile({
@@ -20,8 +20,6 @@ export function listMessages({ socket, db }) {
     if (typeof callback !== "function") {
       return;
     }
-
-    console.log(query);
 
     if (!validate(query)) {
       return callback({
@@ -47,7 +45,6 @@ export function listMessages({ socket, db }) {
           (await redis.get(socket.id)) ||
           "VxEnWBDxMzPGLL0T4Z1B331uCk232vF37ic01g0Hx3E=";
         const symmetricKey = loadByBase64(symmetricKeyBase64);
-        // console.log("symmetricKey", symmetricKey);
 
         // 创建一个随机的初始化向量
         const iv = randomBytes(16);
@@ -59,12 +56,15 @@ export function listMessages({ socket, db }) {
         let encrypted = cipher.update(message.content, "utf8", "hex");
         encrypted += cipher.final("hex");
 
+        const messageToSend = iv.toString("hex") + encrypted;
+
         return {
           ...message,
-          content: iv.toString("hex") + encrypted,
+          content: messageToSend,
         };
       })
     );
+    const signature = md5(JSON.stringify(data));
 
     // console.log("trans data", data);
 
@@ -72,6 +72,7 @@ export function listMessages({ socket, db }) {
       status: "OK",
       data,
       hasMore,
+      signature,
     });
   };
 }

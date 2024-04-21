@@ -17,14 +17,14 @@ async function connectSocket() {
   });
 
   socket.on("connect", () => {
-    console.log("Successfully connected to socket.io server");
-    console.log("socketId:" + socket.id);
+    console.log(
+      "Successfully connected to socket.io server " + "socketId:" + socket.id
+    );
     // 发送事件到服务器
     socket.emit("publicKey:get");
   });
 
   socket.on("publicKey:get:response", (publicKey) => {
-    // console.log("Received public key:", publicKey);
     // 使用公钥加密对称密钥
     const encryptedSymmetricKey = crypto.publicEncrypt(
       {
@@ -34,8 +34,6 @@ async function connectSocket() {
       },
       Buffer.from(symmetricKey)
     );
-    // console.log("generate AES KEY" + symmetricKey);
-    // console.log(symmetricKey.length);
 
     // 将加密后的对称密钥转换为 Base64 格式，以便在网络上发送
     const encryptedSymmetricKeyBase64 =
@@ -48,8 +46,6 @@ async function connectSocket() {
         symmetricKey: encryptedSymmetricKeyBase64,
       },
       (response) => {
-        // console.log(response);
-
         // 创建一个随机的初始化向量
         const iv = randomBytes(16);
 
@@ -80,6 +76,13 @@ async function connectSocket() {
                 orderBy: "id:asc",
               },
               (payloads) => {
+                //验证签名
+                if (md5(JSON.stringify(payloads.data)) !== payloads.signature) {
+                  console.log("Invalid signature");
+                  return;
+                }
+
+                // 解密消息
                 payloads.data = payloads.data.map((payload) => {
                   // 创建一个解密器
                   const iv = Buffer.from(payload.content.slice(0, 32), "hex");
@@ -88,7 +91,6 @@ async function connectSocket() {
                     symmetricKey,
                     iv
                   );
-                  console.log(socket.id + " " + storeByBase64(symmetricKey));
                   // 解密消息
                   const encryptedContent = payload.content.slice(32);
                   let decrypted = decipher.update(
@@ -104,7 +106,13 @@ async function connectSocket() {
                     content: decrypted,
                   };
                 });
-                console.log(payloads);
+
+                console.log(
+                  "拉取到的消息列表" +
+                    JSON.stringify(payloads) +
+                    "长度为" +
+                    payloads.data.length
+                );
               }
             );
           }
@@ -123,7 +131,7 @@ async function connectSocket() {
     // 创建一个解密器
     const iv = Buffer.from(payload.message.slice(0, 32), "hex");
     const decipher = createDecipheriv("aes-256-cbc", symmetricKey, iv);
-    console.log(socket.id + " " + storeByBase64(symmetricKey));
+
     // 解密消息
     const encryptedContent = payload.message.slice(32);
     let decrypted = decipher.update(encryptedContent, "hex", "utf8");

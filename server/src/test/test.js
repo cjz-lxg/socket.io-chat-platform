@@ -17,14 +17,14 @@ async function connectSocket() {
   });
 
   socket.on("connect", () => {
-    console.log("Successfully connected to socket.io server");
-    console.log("socketId:" + socket.id);
+    console.log(
+      "Successfully connected to socket.io server " + "socketId:" + socket.id
+    );
     // 发送事件到服务器
     socket.emit("publicKey:get");
   });
 
   socket.on("publicKey:get:response", (publicKey) => {
-    // console.log("Received public key:", publicKey);
     // 使用公钥加密对称密钥
     const encryptedSymmetricKey = crypto.publicEncrypt(
       {
@@ -34,8 +34,6 @@ async function connectSocket() {
       },
       Buffer.from(symmetricKey)
     );
-    // console.log("generate AES KEY" + symmetricKey);
-    // console.log(symmetricKey.length);
 
     // 将加密后的对称密钥转换为 Base64 格式，以便在网络上发送
     const encryptedSymmetricKeyBase64 =
@@ -74,18 +72,11 @@ async function connectSocket() {
     );
   });
 
-  socket.on("message:sent", (message) => {
-    console.log("received message:" + message);
-  });
 
   socket.on("disconnect", () => {
     console.log("Disconnected from socket.io server");
   });
 
-  // 监听服务器发来的事件
-  socket.on("message", (msg) => {
-    console.log("New message:", msg);
-  });
 
   return socket;
 }
