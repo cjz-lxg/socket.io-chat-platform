@@ -91,7 +91,10 @@ export function sendMessage({ io, socket, db }) {
             "/n 密钥:" +
             symmetricKeyFromRedis
         );
-        io.to(socketId).emit("message:sent", messageToSend);
+        io.to(socketId).emit("message:sent", {
+          message: messageToSend,
+          signature: md5(messageToSend),
+        });
       })
     );
 

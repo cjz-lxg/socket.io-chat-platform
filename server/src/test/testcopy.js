@@ -79,12 +79,18 @@ async function connectSocket() {
   });
 
   socket.on("message:sent", (payload) => {
+    // 验证签名
+    if (md5(payload.message) !== payload.signature) {
+      console.log("Invalid signature");
+      return;
+    }
+
     // 创建一个解密器
-    const iv = Buffer.from(payload.slice(0, 32), "hex");
+    const iv = Buffer.from(payload.message.slice(0, 32), "hex");
     const decipher = createDecipheriv("aes-256-cbc", symmetricKey, iv);
     console.log(socket.id + " " + storeByBase64(symmetricKey));
     // 解密消息
-    const encryptedContent = payload.slice(32);
+    const encryptedContent = payload.message.slice(32);
     let decrypted = decipher.update(encryptedContent, "hex", "utf8");
     decrypted += decipher.final("utf8");
 
