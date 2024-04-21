@@ -12,7 +12,7 @@ async function connectSocket() {
   const socket = io(serverUrl, {
     extraHeaders: {
       Cookie:
-        "sid=s%3AwGAkah2QFCkVU-0TFUiby7YpmRY5qy-A.FG38J%2BvB24sDT2AnSlqu1Po9NxocjZnv67g3JIQQbMc", // 假设服务器返回了sessionId
+        "sid=s%3Aebyj3TXDe2VcPkiGOcthORgLTfPM-17g.RapFE1S6rBf7Zm39CPlQTrYhlXIh%2F1STvNfs3TQlX28", // 假设服务器返回了sessionId
     },
   });
 
@@ -33,8 +33,8 @@ async function connectSocket() {
       },
       Buffer.from(symmetricKey)
     );
-    console.log("generate AES KEY" + symmetricKey);
-    console.log(symmetricKey.length);
+    // console.log("generate AES KEY" + symmetricKey);
+    // console.log(symmetricKey.length);
 
     // 将加密后的对称密钥转换为 Base64 格式，以便在网络上发送
     const encryptedSymmetricKeyBase64 =
@@ -78,7 +78,7 @@ async function connectSocket() {
   });
 
   socket.on("message:sent", (message) => {
-    console.log(message);
+    console.log("receive message:" + message);
   });
 
   socket.on("disconnect", () => {

@@ -7,6 +7,14 @@ import { generateKeyPairSync } from "crypto";
 
 import { createHash } from "crypto";
 
+export function storeByBase64(content) {
+  return Buffer.from(content).toString("base64");
+}
+
+export function loadByBase64(content) {
+  return Buffer.from(content, "base64");
+}
+
 export function md5(data) {
   return createHash("md5").update(data).digest("hex");
 }

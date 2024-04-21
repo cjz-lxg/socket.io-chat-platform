@@ -25,6 +25,7 @@ import {
   userStateRoom,
   logger,
   sessionRoom,
+  redis,
 } from "./util.js";
 const CLEANUP_ZOMBIE_USERS_INTERVAL_IN_MS = 60_000;
 

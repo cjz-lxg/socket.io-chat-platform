@@ -1,5 +1,10 @@
 import { Scope } from "ajv/dist/compile/codegen/scope.js";
-import { generateRSAKeyPair, redis } from "../util.js";
+import {
+  generateRSAKeyPair,
+  loadByBase64,
+  redis,
+  storeByBase64,
+} from "../util.js";
 import crypto from "crypto";
 
 export function sendPublicKey({ io, socket, db }) {
@@ -7,7 +12,6 @@ export function sendPublicKey({ io, socket, db }) {
     const key_pair = generateRSAKeyPair();
 
     redis.set(socket.userId, key_pair.privateKey);
-    // console.log(key_pair);
 
     socket.emit("publicKey:get:response", key_pair.publicKey);
   };
@@ -33,7 +37,10 @@ export function receiveSymmetricKey({ io, socket, db }) {
       Buffer.from(cryptKey, "base64")
     );
 
-    redis.set(socket.userId, symmetricKey);
+    const symmetricKeyBase64 = storeByBase64(symmetricKey);
+    // await redis.set(socket.userId, symmetricKeyBase64);
+    await redis.set(socket.id, symmetricKeyBase64);
+    const load = loadByBase64(symmetricKeyBase64);
 
     callback({
       status: "OK",
