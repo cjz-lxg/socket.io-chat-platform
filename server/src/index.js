@@ -18,6 +18,7 @@ import { getUser } from "./user/get.js";
 import { initAuth } from "./auth/index.js";
 import { reachUser } from "./user/reach.js";
 import { searchUsers } from "./user/search.js";
+import { sendPublicKey, receiveSymmetricKey } from "./crypt/exchange.js";
 import {
   channelRoom,
   userRoom,
@@ -25,7 +26,6 @@ import {
   logger,
   sessionRoom,
 } from "./util.js";
-
 const CLEANUP_ZOMBIE_USERS_INTERVAL_IN_MS = 60_000;
 
 export async function createApp(httpServer, config) {
@@ -100,7 +100,10 @@ function initEventHandlers({ io, db, config }) {
   });
 
   io.on("connection", async (socket) => {
-    
+    socket.on("publicKey:get", sendPublicKey({ io, socket, db }));
+
+    socket.on("symmetricKey:send", receiveSymmetricKey({ io, socket, db }));
+
     // 创建群聊/私聊
     socket.on("channel:create", createChannel({ io, socket, db }));
     socket.on("channel:join", joinChannel({ io, socket, db }));
@@ -157,6 +160,8 @@ function initEventHandlers({ io, db, config }) {
         .emit("user:connected", socket.userId);
     }
   });
+
+  const initAfterExchange = ({ io, db, config }) => {};
 }
 
 function scheduleZombieUsersCleanup({ io, db }) {

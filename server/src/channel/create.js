@@ -35,7 +35,7 @@ export function createChannel({ io, socket, db }) {
     logger.info(
       "public channel [%s] was created by user [%s]",
       channel.id,
-      socket.userId,
+      socket.userId
     );
 
     // broadcast to other tabs of the same user

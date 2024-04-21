@@ -5,6 +5,7 @@ const validate = ajv.compile({
   properties: {
     content: { type: "string", minLength: 1, maxLength: 5000 },
     channelId: { type: "string", format: "uuid" },
+    signature: { type: "string", minLength: 1, maxLength: 5000 },
   },
   required: ["content", "channelId"],
   additionalProperties: false,

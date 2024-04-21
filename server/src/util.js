@@ -1,6 +1,27 @@
 import { createLogger } from "winston";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
+import Redis from "ioredis";
+
+import { generateKeyPairSync } from "crypto";
+
+export const redis = new Redis();
+
+export function generateRSAKeyPair() {
+  const { publicKey, privateKey } = generateKeyPairSync("rsa", {
+    modulusLength: 2048, // the length of your key in bits
+    publicKeyEncoding: {
+      type: "spki", // recommended to be 'spki' by the Node.js docs
+      format: "pem", // 'pem' is the default format
+    },
+    privateKeyEncoding: {
+      type: "pkcs8", // recommended to be 'pkcs8' by the Node.js docs
+      format: "pem", // 'pem' is the default format
+    },
+  });
+
+  return { publicKey, privateKey };
+}
 
 export const logger = createLogger({
   level: "info",
