@@ -64,7 +64,6 @@ export function sendMessage({ io, socket, db }) {
     await Promise.all(
       [...sockets].map(async (socketId) => {
         if (socket.id == socketId) return;
-        // console.log(socket.id + "-------------->" + socketId);
         const symmetricKeyFromRedis = await redis.get(socketId);
         if (!symmetricKeyFromRedis) return;
 
@@ -82,8 +81,17 @@ export function sendMessage({ io, socket, db }) {
         encrypted += cipher.final("hex");
 
         const messageToSend = iv.toString("hex") + encrypted;
-        console.log(socketId + "发送消息:" + messageToSend);
-        socket.emit("message:sent", messageToSend);
+        console.log(
+          socket.id +
+            "-------------->" +
+            socketId +
+            " " +
+            "发送消息:" +
+            messageToSend +
+            "/n 密钥:" +
+            symmetricKeyFromRedis
+        );
+        io.to(socketId).emit("message:sent", messageToSend);
       })
     );
 

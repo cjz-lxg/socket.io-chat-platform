@@ -2,13 +2,13 @@ import axios from "axios";
 import io from "socket.io-client";
 import crypto from "crypto";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-import { md5 } from "../util.js";
+import { md5, storeByBase64 } from "../util.js";
 
 const serverUrl = "http://localhost:3000"; // 服务器地址
 const symmetricKey = crypto.randomBytes(32);
 
 async function connectSocket() {
-  // 使用从登录请求获得的cookie来建立Socket连接
+  // 使用从登录请求获得的cookie来建立Socket连接,使用postman模拟时记得将每次的cookie删掉 ,否则都是重复利用一个sid
   const socket = io(serverUrl, {
     extraHeaders: {
       Cookie:
@@ -18,12 +18,13 @@ async function connectSocket() {
 
   socket.on("connect", () => {
     console.log("Successfully connected to socket.io server");
+    console.log("socketId:" + socket.id);
     // 发送事件到服务器
     socket.emit("publicKey:get");
   });
 
   socket.on("publicKey:get:response", (publicKey) => {
-    console.log("Received public key:", publicKey);
+    // console.log("Received public key:", publicKey);
     // 使用公钥加密对称密钥
     const encryptedSymmetricKey = crypto.publicEncrypt(
       {
@@ -47,7 +48,7 @@ async function connectSocket() {
         symmetricKey: encryptedSymmetricKeyBase64,
       },
       (response) => {
-        console.log(response);
+        // console.log(response);
 
         // 创建一个随机的初始化向量
         const iv = randomBytes(16);
@@ -70,24 +71,28 @@ async function connectSocket() {
             signature: md5(messageToSend),
           },
           (response) => {
-            console.log(response);
+            // console.log(response);
           }
         );
       }
     );
   });
 
-  socket.on("message:sent", (message) => {
-    console.log("receive message:" + message);
+  socket.on("message:sent", (payload) => {
+    // 创建一个解密器
+    const iv = Buffer.from(payload.slice(0, 32), "hex");
+    const decipher = createDecipheriv("aes-256-cbc", symmetricKey, iv);
+    console.log(socket.id + " " + storeByBase64(symmetricKey));
+    // 解密消息
+    const encryptedContent = payload.slice(32);
+    let decrypted = decipher.update(encryptedContent, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+
+    console.log("receive message:" + decrypted);
   });
 
   socket.on("disconnect", () => {
     console.log("Disconnected from socket.io server");
-  });
-
-  // 监听服务器发来的事件
-  socket.on("message", (msg) => {
-    console.log("New message:", msg);
   });
 
   return socket;

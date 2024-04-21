@@ -7,6 +7,7 @@ import { generateKeyPairSync } from "crypto";
 
 import { createHash } from "crypto";
 
+
 export function storeByBase64(content) {
   return Buffer.from(content).toString("base64");
 }
