@@ -71,7 +71,42 @@ async function connectSocket() {
             signature: md5(messageToSend),
           },
           (response) => {
-            // console.log(response);
+            socket.emit(
+              "message:list",
+              {
+                channelId: "c6d6e34b-24cb-45ea-8c76-14f59462461f",
+                after: "0",
+                size: 20,
+                orderBy: "id:asc",
+              },
+              (payloads) => {
+                payloads.data = payloads.data.map((payload) => {
+                  // 创建一个解密器
+                  const iv = Buffer.from(payload.content.slice(0, 32), "hex");
+                  const decipher = createDecipheriv(
+                    "aes-256-cbc",
+                    symmetricKey,
+                    iv
+                  );
+                  console.log(socket.id + " " + storeByBase64(symmetricKey));
+                  // 解密消息
+                  const encryptedContent = payload.content.slice(32);
+                  let decrypted = decipher.update(
+                    encryptedContent,
+                    "hex",
+                    "utf8"
+                  );
+                  decrypted += decipher.final("utf8");
+
+                  // console.log("receive message:" + decrypted);
+                  return {
+                    ...payload,
+                    content: decrypted,
+                  };
+                });
+                console.log(payloads);
+              }
+            );
           }
         );
       }

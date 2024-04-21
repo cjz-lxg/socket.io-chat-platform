@@ -21,6 +21,8 @@ export function listMessages({ socket, db }) {
       return;
     }
 
+    console.log(query);
+
     if (!validate(query)) {
       return callback({
         status: "ERROR",
