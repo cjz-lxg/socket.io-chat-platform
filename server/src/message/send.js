@@ -76,11 +76,10 @@ export function sendMessage({ io, socket, db }) {
         const cipher = createCipheriv("aes-256-cbc", symmetricKey, iv);
 
         // 加密一条消息
-        const message = "Hello, world!";
-        let encrypted = cipher.update(message, "utf8", "hex");
+        let encrypted = cipher.update(message.content, "utf8", "hex");
         encrypted += cipher.final("hex");
 
-        const messageToSend = iv.toString("hex") + encrypted;
+        const contentToSend = iv.toString("hex") + encrypted;
         console.log(
           socket.id +
             "-------------->" +
@@ -91,9 +90,10 @@ export function sendMessage({ io, socket, db }) {
             "/n 密钥:" +
             symmetricKeyFromRedis
         );
+        message.content = contentToSend;
         io.to(socketId).emit("message:sent", {
-          message: messageToSend,
-          signature: md5(messageToSend),
+          message: message,
+          signature: md5(JSON.stringify(message)),
         });
       })
     );
