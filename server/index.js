@@ -8,7 +8,10 @@ logger.add(
   }),
 );
 
-const httpServer = createServer();
+const httpServer = createServer((req, res) => {
+  // logger.info(`Received ${req.method} request for ${req.url}`);
+  // 在这里添加你的请求处理逻辑
+});
 
 await createApp(httpServer, {
   postgres: {
