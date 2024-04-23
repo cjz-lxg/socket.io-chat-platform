@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, onBeforeUnmount } from "vue";
 import { useMainStore } from "@/stores/main";
 import { debounce } from "@/util";
 import { socket } from "@/BackendService";
@@ -87,31 +87,18 @@ function onHide() {
   channels.value = [];
   isLoading.value = false;
 }
+
 </script>
 
 <template>
-  <v-modal
-    v-model="store.showJoinOrCreateChannelModel"
-    @show="onShow"
-    @hide="onHide"
-  >
+  <v-modal v-model="store.showJoinOrCreateChannelModel" @show="onShow" @hide="onHide">
     <template #header>Join or create a channel</template>
 
     <form @submit.prevent="onSubmit">
       <div class="d-flex mb-3">
-        <input
-          ref="input"
-          class="form-control me-2"
-          v-model="channelName"
-          @input="onInput"
-        />
+        <input ref="input" class="form-control me-2" v-model="channelName" @input="onInput" />
 
-        <v-btn
-          color="primary"
-          type="submit"
-          :loading="isLoading"
-          :disabled="!isValid"
-        >
+        <v-btn color="primary" type="submit" :loading="isLoading" :disabled="!isValid">
           Create
         </v-btn>
       </div>
@@ -135,11 +122,7 @@ function onHide() {
           </svg>
           <span class="flex-grow-1">{{ channel.name }}</span>
 
-          <v-btn
-            color="primary"
-            :loading="isLoading"
-            @click="joinChannel(channel)"
-          >
+          <v-btn color="primary" :loading="isLoading" @click="joinChannel(channel)">
             Join
           </v-btn>
         </div>

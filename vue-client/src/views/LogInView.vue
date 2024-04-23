@@ -1,8 +1,10 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import BackendService from "@/BackendService";
 import { useMainStore } from "@/stores/main";
+import io from "socket.io-client";
+
 import VBtn from "@/components/common/VBtn.vue";
 
 const router = useRouter();
@@ -50,6 +52,14 @@ async function onSubmit() {
     isLoading.value = false;
   }
 }
+
+
+onBeforeUnmount(async () => {
+  // 发送你的请求
+  // const res = await BackendService.yourRequest();
+  // 处理响应结果
+});
+
 </script>
 
 <template>
@@ -60,34 +70,16 @@ async function onSubmit() {
         <h1 class="h3 mb-3 fw-normal">Please log in</h1>
 
         <div class="form-floating">
-          <input
-            type="text"
-            class="form-control"
-            id="floatingInput"
-            v-model="username"
-            placeholder="Username"
-          />
+          <input type="text" class="form-control" id="floatingInput" v-model="username" placeholder="Username" />
           <label for="floatingInput">Username</label>
         </div>
 
         <div class="form-floating">
-          <input
-            type="password"
-            class="form-control"
-            id="floatingPassword"
-            v-model="password"
-            placeholder="Password"
-          />
+          <input type="password" class="form-control" id="floatingPassword" v-model="password" placeholder="Password" />
           <label for="floatingPassword">Password</label>
         </div>
 
-        <v-btn
-          type="submit"
-          color="primary"
-          class="w-100 my-2 py-2"
-          :loading="isLoading"
-          :disabled="!isValid"
-        >
+        <v-btn type="submit" color="primary" class="w-100 my-2 py-2" :loading="isLoading" :disabled="!isValid">
           Log in
         </v-btn>
 

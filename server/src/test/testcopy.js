@@ -16,6 +16,7 @@ async function connectSocket() {
     },
   });
 
+
   socket.on("connect", () => {
     console.log(
       "Successfully connected to socket.io server " + "socketId:" + socket.id
@@ -109,9 +110,9 @@ async function connectSocket() {
 
                 console.log(
                   "拉取到的消息列表" +
-                    JSON.stringify(payloads) +
-                    "长度为" +
-                    payloads.data.length
+                  JSON.stringify(payloads) +
+                  "长度为" +
+                  payloads.data.length
                 );
               }
             );

@@ -49,8 +49,16 @@ onBeforeMount(async () => {
       }
 
       return;
+
+      // 被销毁之前
+      onBeforeUnmount(async () => {
+        // 发送你的请求
+        console.log('在被销毁之前');
+        // const res = await BackendService.yourRequest();
+        // 处理响应结果
+      });
     }
-  } catch (e) {}
+  } catch (e) { }
 
   if (!unauthenticatedRoutes.includes(route.name)) {
     const query = {};
@@ -67,7 +75,6 @@ onBeforeMount(async () => {
 
 <template>
   <RouterView />
-
   <JoinOrCreateChannelModal />
   <SearchUserModal />
 </template>

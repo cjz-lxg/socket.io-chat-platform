@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, onBeforeUnmount } from "vue";
 import { useMainStore } from "@/stores/main";
 
 const store = useMainStore();

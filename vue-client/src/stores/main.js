@@ -1,5 +1,10 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { socket } from "@/BackendService";
+import CryptoJS from 'crypto-js';
+import { Buffer } from 'buffer';
+// import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+
+const symmetricKey = CryptoJS.lib.WordArray.random(32);
 
 function insertAtRightOffset(messages, message) {
   // note: this won't work with id bigger than Number.MAX_SAFE_INTEGER
@@ -55,14 +60,54 @@ export const useMainStore = defineStore("main", {
 
           await this.loadMessagesForSelectedChannel("forward");
         }
+
       });
 
       socket.on("channel:created", (channel) => this.addChannel(channel));
       socket.on("channel:joined", (channel) => this.addChannel(channel));
 
+
+      // 使用公钥加密私钥
+      socket.on("publicKey:get:response", (publicKey) => {
+        console.log(publicKey)
+        publicKey = CryptoJS.lib.WordArray.create(Buffer.from(publicKey, 'base64'));
+        /* // 使用公钥加密对称密钥
+        const encryptedSymmetricKey = crypto.publicEncrypt(
+          {
+            key: publicKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: "sha256",
+          },
+          Buffer.from(symmetricKey)
+        ); */
+        const encryptedSymmetricKey = CryptoJS.RSA.encrypt(symmetricKey, publicKey, {
+          OAEP: {
+            hash: CryptoJS.algo.SHA256,
+            mgf1: {
+              hash: CryptoJS.algo.SHA256
+            }
+          }
+        });
+
+        // 将加密后的对称密钥转换为 Base64 格式，以便在网络上发送
+        const encryptedSymmetricKeyBase64 =
+          encryptedSymmetricKey.toString("base64");
+
+        // 然后你可以发送加密后的对称密钥
+        socket.emit(
+          "symmetricKey:send",
+          {
+            symmetricKey: encryptedSymmetricKeyBase64,
+          },
+        );
+      });
+
+
       socket.on("message:sent", (message) => {
         this.addMessage(message, true);
+
       });
+
 
       socket.on("user:connected", (userId) => {
         if (this.users.has(userId)) {
@@ -99,7 +144,6 @@ export const useMainStore = defineStore("main", {
 
     async init() {
       socket.connect();
-
       const res = await socket.emitWithAck("channel:list", {
         size: 100,
       });

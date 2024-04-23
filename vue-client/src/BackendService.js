@@ -22,6 +22,15 @@ class BackendService {
   }
 
   logIn(payload) {
+    // 登录发请求
+    socket.on('connect', () => {
+      console.log(
+        "Successfully connected to socket.io server " + "socketId:" + socket.id
+      );
+      // 发送事件到服务器
+      socket.emit("publicKey:get");
+    });
+
     return fetch(BASE_URL + "/login", {
       credentials: "include",
       method: "POST",
@@ -51,3 +60,4 @@ export const socket = io(BASE_URL2, {
   path:
     process.env.NODE_ENV === "production" ? "/api/socket.io/" : "/socket.io/",
 });
+
