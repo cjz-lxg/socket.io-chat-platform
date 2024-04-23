@@ -16,6 +16,8 @@ export function typingMessage({ socket, db }) {
       return;
     }
 
+    console.log("------------")
+
     const isInChannel = await db.isUserInChannel(
       socket.userId,
       payload.channelId,

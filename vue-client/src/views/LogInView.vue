@@ -11,8 +11,8 @@ const router = useRouter();
 const route = useRoute();
 const store = useMainStore();
 
-const username = ref("");
-const password = ref("");
+const username = ref("cjz");
+const password = ref("cjz");
 const isLoading = ref(false);
 const errorMessage = ref("");
 

@@ -49,6 +49,7 @@ export const useMainStore = defineStore("main", {
 
       socket.on("connect", async () => {
         if (this.isInitialized) {
+
           const res = await socket.emitWithAck("channel:list", {
             size: 100,
           });
@@ -66,7 +67,7 @@ export const useMainStore = defineStore("main", {
 
       // 使用公钥加密私钥
       socket.on("publicKey:get:response", (publicKey) => {
-        console.log(publicKey);
+        console.log("---------->" + publicKey);
         publicKey = forge.pki.publicKeyFromPem(publicKey);
         /* // 使用公钥加密对称密钥
         const encryptedSymmetricKey = crypto.publicEncrypt(
@@ -86,14 +87,17 @@ export const useMainStore = defineStore("main", {
         );
 
         // 将加密后的对称密钥转换为 Base64 格式，以便在网络上发送
-        const encryptedSymmetricKeyBase64 =
-          encryptedSymmetricKey.toString("base64");
+        const encryptedSymmetricKeyBase64 = forge.util.encode64(encryptedSymmetricKey);
 
         // 然后你可以发送加密后的对称密钥
-        socket.emit("symmetricKey:send", {
-          symmetricKey: encryptedSymmetricKeyBase64,
-        });
-        console.log("------------------");
+        if (socket.connected) {
+          socket.emit("symmetricKey:send", { symmetricKey: encryptedSymmetricKeyBase64 }, response => {
+            console.log("对称密钥已经发送成功")
+          });
+          console.log("Socket is connected");
+        } else {
+          console.error("Socket not connected.");
+        }
       });
 
       socket.on("message:sent", (message) => {
@@ -135,6 +139,13 @@ export const useMainStore = defineStore("main", {
 
     async init() {
       socket.connect();
+
+      console.log(
+        "Successfully connected to socket.io server " + "socketId:" + socket.id
+      );
+      // 发送事件到服务器
+      await socket.emit("publicKey:get");
+
       const res = await socket.emitWithAck("channel:list", {
         size: 100,
       });

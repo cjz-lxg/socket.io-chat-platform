@@ -23,6 +23,7 @@ export function receiveSymmetricKey({ io, socket, db }) {
       return;
     }
 
+    console.log(payload)
     const cryptKey = payload.symmetricKey;
 
     const privateKey = await redis.get(socket.userId);
