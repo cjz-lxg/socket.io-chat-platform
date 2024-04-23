@@ -41,6 +41,7 @@ export function receiveSymmetricKey({ io, socket, db }) {
     // await redis.set(socket.userId, symmetricKeyBase64);
     await redis.set(socket.id, symmetricKeyBase64);
     const load = loadByBase64(symmetricKeyBase64);
+    console.log("---------->" + load.length);
 
     callback({
       status: "OK",
