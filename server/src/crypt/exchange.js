@@ -23,7 +23,6 @@ export function receiveSymmetricKey({ io, socket, db }) {
       return;
     }
 
-    console.log(payload)
     const cryptKey = payload.symmetricKey;
 
     const privateKey = await redis.get(socket.userId);
@@ -39,10 +38,12 @@ export function receiveSymmetricKey({ io, socket, db }) {
     );
 
     const symmetricKeyBase64 = storeByBase64(symmetricKey);
+
+    console.log("获取到的对称密钥:" + symmetricKeyBase64);
+
     // await redis.set(socket.userId, symmetricKeyBase64);
     await redis.set(socket.id, symmetricKeyBase64);
-    const load = loadByBase64(symmetricKeyBase64);
-    console.log("---------->" + load.length);
+    // const load = loadByBase64(symmetricKeyBase64);
 
     callback({
       status: "OK",

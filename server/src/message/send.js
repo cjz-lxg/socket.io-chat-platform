@@ -59,7 +59,6 @@ export function sendMessage({ io, socket, db }) {
       });
     }
 
-    console.log(socket.id + "发送消息");
     const sockets = await io.in(channelRoom(message.channelId)).allSockets();
     await Promise.all(
       [...sockets].map(async (socketId) => {
@@ -85,10 +84,13 @@ export function sendMessage({ io, socket, db }) {
             "-------------->" +
             socketId +
             " " +
-            "发送消息:" +
-            messageToSend +
+            "------->原消息:---------->"+
+            message.content +
+            "加密后的消息:" +
+            contentToSend +
             "/n 密钥:" +
-            symmetricKeyFromRedis
+            symmetricKeyFromRedis +
+            "\n"
         );
         message.content = contentToSend;
         io.to(socketId).emit("message:sent", {

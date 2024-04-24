@@ -1,7 +1,7 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { socket } from "@/BackendService";
 import forge from "node-forge";
-// import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { md5 } from "../util";
 
 const symmetricKey = forge.random.getBytesSync(32);
 
@@ -49,7 +49,6 @@ export const useMainStore = defineStore("main", {
 
       socket.on("connect", async () => {
         if (this.isInitialized) {
-
           const res = await socket.emitWithAck("channel:list", {
             size: 100,
           });
@@ -69,15 +68,7 @@ export const useMainStore = defineStore("main", {
       socket.on("publicKey:get:response", (publicKey) => {
         console.log("---------->" + publicKey);
         publicKey = forge.pki.publicKeyFromPem(publicKey);
-        /* // 使用公钥加密对称密钥
-        const encryptedSymmetricKey = crypto.publicEncrypt(
-          {
-            key: publicKey,
-            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-            oaepHash: "sha256",
-          },
-          Buffer.from(symmetricKey)
-        ); */
+
         const encryptedSymmetricKey = publicKey.encrypt(
           symmetricKey,
           "RSA-OAEP",
@@ -87,14 +78,19 @@ export const useMainStore = defineStore("main", {
         );
 
         // 将加密后的对称密钥转换为 Base64 格式，以便在网络上发送
-        const encryptedSymmetricKeyBase64 = forge.util.encode64(encryptedSymmetricKey);
+        const encryptedSymmetricKeyBase64 = forge.util.encode64(
+          encryptedSymmetricKey
+        );
 
         // 然后你可以发送加密后的对称密钥
         if (socket.connected) {
-          socket.emit("symmetricKey:send", { symmetricKey: encryptedSymmetricKeyBase64 }, response => {
-            console.log("对称密钥已经发送成功")
-          });
-          console.log("Socket is connected");
+          socket.emit(
+            "symmetricKey:send",
+            { symmetricKey: encryptedSymmetricKeyBase64 },
+            (response) => {
+              console.log("对称密钥已经发送成功");
+            }
+          );
         } else {
           console.error("Socket not connected.");
         }
@@ -228,8 +224,39 @@ export const useMainStore = defineStore("main", {
       if (res.status !== "OK") {
         return;
       }
+      // 验证签名
+      if (md5(JSON.stringify(res.data)) !== res.signature) {
+        console.log("Invalid signature");
+        return;
+      }
+      //解密消息
 
-      res.data.forEach((message) => this.addMessage(message));
+      res.data.forEach((message) => {
+        // console.log(message);
+
+        // 创建一个随机的初始化向量
+        const iv = forge.util.hexToBytes(message.content.slice(0, 32));
+        // 创建一个解密器
+        const decipher = forge.cipher.createDecipher("AES-CBC", symmetricKey);
+        decipher.start({ iv: iv });
+
+        // 解密消息
+        const encryptedContent = message.content.slice(32);
+        decipher.update(
+          forge.util.createBuffer(forge.util.hexToBytes(encryptedContent))
+        );
+
+        const result = decipher.finish(); // 检查解密是否成功
+
+        if (result) {
+          // 输出解密后的文本
+          let decrypt = decipher.output.toString("utf8");
+          message.content = decrypt;
+          this.addMessage(message);
+        } else {
+          throw new Error("Failed to decrypt data.");
+        }
+      });
 
       if (order === "forward" && res.hasMore) {
         return this.loadMessagesForSelectedChannel("forward");
@@ -274,12 +301,31 @@ export const useMainStore = defineStore("main", {
         channelId: this.selectedChannelId,
         content,
       };
+      console.log("发送的消息:" + content);
 
       this.addMessage(message);
+      // 创建一个随机的初始化向量
+      const iv = forge.random.getBytesSync(16);
+
+      // 创建一个加密器
+      // const symmetricKey = window.sessionStorage.getItem("symmetricKey");
+      const cipher = forge.cipher.createCipher("AES-CBC", symmetricKey);
+
+      // 加密一条消息
+      cipher.start({ iv: iv });
+      cipher.update(forge.util.createBuffer(forge.util.encodeUtf8(content)));
+      cipher.finish();
+
+      // 获取加密后的数据并转换为十六进制字符串
+      const encrypted = cipher.output.toHex();
+
+      // 将初始化向量和加密后的数据合并，转换为十六进制字符串
+      const contentToSend = forge.util.bytesToHex(iv) + encrypted;
 
       const payload = {
         channelId: this.selectedChannelId,
-        content,
+        content: contentToSend,
+        signature: md5(contentToSend),
       };
 
       const res = await socket.emitWithAck("message:send", payload);

@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node entrypoint.js",
     "dev": "node index.js",
+    "win-dev": "set NODE_ENV=development&& nodemon --watch \"src/**/*.js\" --exec \"node index.js\"",
     "test": "mocha --exit --recursive",
     "format": "prettier -w index.js src/ test/"
   },
