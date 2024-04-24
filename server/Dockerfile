@@ -8,7 +8,8 @@ COPY package*.json ./
 
 USER node
 
-RUN npm ci --omit=dev
+RUN npm config set registry https://registry.npmmirror.com
+RUN for i in 1 2 3; do npm ci --omit=dev --fetch-timeout=600000 --prefer-offline && break || sleep 15; done
 
 COPY --chown=node:node . .
 

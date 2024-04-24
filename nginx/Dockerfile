@@ -5,7 +5,8 @@ WORKDIR /tmp
 
 COPY ../vue-client/package*.json .
 
-RUN npm ci
+RUN npm config set registry https://registry.npmmirror.com
+RUN npm ci --prefer-offline --no-audit --progress=false
 
 COPY ../vue-client/ .
 

@@ -7,7 +7,6 @@ import { generateKeyPairSync } from "crypto";
 
 import { createHash } from "crypto";
 
-
 export function storeByBase64(content) {
   return Buffer.from(content).toString("base64");
 }
@@ -20,7 +19,19 @@ export function md5(data) {
   return createHash("md5").update(data).digest("hex");
 }
 
-export const redis = new Redis();
+export const redis = new Redis({
+  host: "redis", // This matches the service name in docker-compose.yml
+  port: 6379, // Default Redis port
+  password: "", // Add password if you have one set in your Redis configuration
+});
+
+redis.on("connect", () => {
+  console.log("Connected to Redis");
+});
+
+redis.on("error", (err) => {
+  console.error("Error connecting to Redis:", err);
+});
 
 export function generateRSAKeyPair() {
   const { publicKey, privateKey } = generateKeyPairSync("rsa", {

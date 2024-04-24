@@ -86,7 +86,7 @@ export function sendMessage({ io, socket, db }) {
             " " +
             "------->原消息:---------->"+
             message.content +
-            "加密后的消息:" +
+            "----------->加密后的消息---------->" +
             contentToSend +
             "/n 密钥:" +
             symmetricKeyFromRedis +
