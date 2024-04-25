@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { socket } from "@/BackendService";
-import forge from "node-forge";
+import forge, { md } from "node-forge";
 import { md5 } from "../util";
 
 const symmetricKey = forge.random.getBytesSync(32);
@@ -97,8 +97,40 @@ export const useMainStore = defineStore("main", {
       });
 
       socket.on("message:sent", (message) => {
-        this.addMessage(message, true);
-        location.reload();
+        if (md5(JSON.stringify(message.message)) !== message.signature) {
+          console.log("Invalid signature");
+          return;
+        }
+        message = message.message;
+
+        // 创建一个随机的初始化向量
+        const iv = forge.util.hexToBytes(message.content.slice(0, 32));
+        // 创建一个解密器
+        const decipher = forge.cipher.createDecipher("AES-CBC", symmetricKey);
+        decipher.start({ iv: iv });
+
+        // 解密消息
+        const encryptedContent = message.content.slice(32);
+        decipher.update(
+          forge.util.createBuffer(forge.util.hexToBytes(encryptedContent))
+        );
+
+        const result = decipher.finish(); // 检查解密是否成功
+
+        if (result) {
+          // 输出解密后的文本
+          let decrypt = decipher.output.toString("utf8");
+          console.log(
+            "未解密时的消息----------->" +
+              message.content +
+              "-------------->解密后的消息-------->" +
+              decrypt
+          );
+          message.content = decrypt;
+          this.addMessage(message);
+        } else {
+          throw new Error("Failed to decrypt data.");
+        }
       });
 
       socket.on("user:connected", (userId) => {
@@ -136,10 +168,7 @@ export const useMainStore = defineStore("main", {
 
     async init() {
       socket.connect();
-
-      console.log(
-        "Successfully connected to socket.io server " + "socketId:" + socket.id
-      );
+      
       // 发送事件到服务器
       await socket.emit("publicKey:get");
 
@@ -278,6 +307,17 @@ export const useMainStore = defineStore("main", {
 
       const inserted = insertAtRightOffset(channel.messages, message);
 
+      /* console.log(
+        "inserted----->" +
+          inserted +
+          "----->countAsUnread----->" +
+          countAsUnread +
+          "----->from----->" +
+          message.from +
+          "----->this.currentUser.id----->" +
+          this.currentUser.id
+      ); */
+
       if (inserted && countAsUnread && message.from !== this.currentUser.id) {
         channel.unreadCount++;
         this.ackLastMessageIfNecessary();
@@ -302,7 +342,6 @@ export const useMainStore = defineStore("main", {
         channelId: this.selectedChannelId,
         content,
       };
-      console.log("发送的消息:" + content);
 
       this.addMessage(message);
       // 创建一个随机的初始化向量
@@ -322,6 +361,15 @@ export const useMainStore = defineStore("main", {
 
       // 将初始化向量和加密后的数据合并，转换为十六进制字符串
       const contentToSend = forge.util.bytesToHex(iv) + encrypted;
+
+      console.log(
+        "原消息------->" +
+          content +
+          "-------->加密后----->" +
+          contentToSend +
+          "------->签名----->" +
+          md5(contentToSend)
+      );
 
       const payload = {
         channelId: this.selectedChannelId,

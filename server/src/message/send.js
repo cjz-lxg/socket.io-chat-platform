@@ -1,3 +1,4 @@
+import { channel } from "diagnostics_channel";
 import { ajv, channelRoom, loadByBase64, md5, redis } from "../util.js";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
@@ -83,8 +84,9 @@ export function sendMessage({ io, socket, db }) {
           socket.id +
             "-------------->" +
             socketId +
-            " " +
-            "------->原消息:---------->"+
+            "-------->所属频道------>" +
+            message.channelId +
+            "------->原消息:---------->" +
             message.content +
             "----------->加密后的消息---------->" +
             contentToSend +
