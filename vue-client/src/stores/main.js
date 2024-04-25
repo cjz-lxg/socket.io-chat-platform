@@ -98,6 +98,7 @@ export const useMainStore = defineStore("main", {
 
       socket.on("message:sent", (message) => {
         this.addMessage(message, true);
+        location.reload();
       });
 
       socket.on("user:connected", (userId) => {
