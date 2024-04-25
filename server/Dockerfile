@@ -14,5 +14,4 @@ RUN for i in 1 2 3; do npm ci --omit=dev --fetch-timeout=600000 --prefer-offline
 COPY --chown=node:node . .
 
 EXPOSE 3000
-
 CMD [ "node", "entrypoint.js" ]

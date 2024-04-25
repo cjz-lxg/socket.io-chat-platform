@@ -11,8 +11,8 @@ const router = useRouter();
 const route = useRoute();
 const store = useMainStore();
 
-const username = ref("mysql");
-const password = ref("mysql");
+const username = ref("");
+const password = ref("");
 const isLoading = ref(false);
 const errorMessage = ref("");
 

@@ -18,12 +18,15 @@ export function loadByBase64(content) {
 export function md5(data) {
   return createHash("md5").update(data).digest("hex");
 }
-
-export const redis = new Redis(/* {
-  host: "redis", // This matches the service name in docker-compose.yml
-  port: 6379, // Default Redis port
-  password: "", // Add password if you have one set in your Redis configuration
-} */);
+const env = process.env.NODE_ENV ? process.env.NODE_ENV.trim() : "";
+export const redis =
+  env === "dev"
+    ? new Redis()
+    : new Redis({
+        host: "redis", // This matches the service name in docker-compose.yml
+        port: 6379, // Default Redis port
+        password: "", // Add password if you have one set in your Redis configuration
+      });
 
 redis.on("connect", () => {
   console.log("Connected to Redis");

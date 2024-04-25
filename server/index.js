@@ -5,9 +5,8 @@ import { createApp, logger } from "./src/index.js";
 logger.add(
   new transports.Console({
     format: format.combine(format.colorize(), format.splat(), format.simple()),
-  }),
+  })
 );
-process.env.DEBUG = 'socket.io*';
 const httpServer = createServer();
 
 await createApp(httpServer, {
