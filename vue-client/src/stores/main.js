@@ -348,7 +348,6 @@ export const useMainStore = defineStore("main", {
       const iv = forge.random.getBytesSync(16);
 
       // 创建一个加密器
-      // const symmetricKey = window.sessionStorage.getItem("symmetricKey");
       const cipher = forge.cipher.createCipher("AES-CBC", symmetricKey);
 
       // 加密一条消息

@@ -41,9 +41,7 @@ export function receiveSymmetricKey({ io, socket, db }) {
 
     console.log("获取到的对称密钥:" + symmetricKeyBase64);
 
-    // await redis.set(socket.userId, symmetricKeyBase64);
     await redis.set(socket.id, symmetricKeyBase64);
-    // const load = loadByBase64(symmetricKeyBase64);
 
     callback({
       status: "OK",
